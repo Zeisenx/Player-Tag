@@ -9,7 +9,7 @@ native bool PlayerTag_Has(int client, const char[] tagName);
 native void PlayerTag_Remove(int client, const char[] tagName);
 native void PlayerTag_RemoveAll(int client);
 
-public SharedPlugin __pl_zp_fakestar_music = 
+public SharedPlugin __pl_player_tag = 
 {
 	name = "player_tag",
 	file = "player_tag.smx",
@@ -21,7 +21,7 @@ public SharedPlugin __pl_zp_fakestar_music =
 };
 
 #if !defined REQUIRE_PLUGIN
-public void __pl_zp_fakestar_music_SetNTVOptional()
+public void __pl_player_tag_SetNTVOptional()
 {
 	MarkNativeAsOptional("PlayerTag_Add");
 	MarkNativeAsOptional("PlayerTag_Has");
