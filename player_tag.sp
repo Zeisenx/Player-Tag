@@ -14,6 +14,9 @@ public Plugin myinfo =
 
 ArrayList g_tagList[MAXPLAYERS + 1];
 
+Handle g_fwOnPlayerTagAdded;
+Handle g_fwOnPlayerTagRemoved;
+
 public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max)
 {
 	RegPluginLibrary("player_tag");
@@ -21,6 +24,9 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	CreateNative("PlayerTag_Has", Native_Has);
 	CreateNative("PlayerTag_Remove", Native_Remove);
 	CreateNative("PlayerTag_RemoveAll", Native_RemoveAll);
+	
+	g_fwOnPlayerTagAdded		= CreateGlobalForward("PlayerTag_OnAdded", ET_Ignore, Param_Cell, Param_String);
+	g_fwOnPlayerTagRemoved		= CreateGlobalForward("PlayerTag_OnRemoved", ET_Ignore, Param_Cell, Param_String);
 	
 	return APLRes_Success;
 }
@@ -61,7 +67,22 @@ public int Native_RemoveAll(Handle plugin, int numParams)
 {
 	int client = GetNativeCell(1);
 	
+	if (g_tagList[client] == null)
+		return 0;
+	
+	ArrayList tagList = g_tagList[client].Clone();
+	
 	delete g_tagList[client];
+	for (int i=0; i<tagList.Length; i++)
+	{
+		char tagName[TAGNAME_LENGTH];
+		tagList.GetString(i, tagName, sizeof(tagName));
+		Forward_OnRemoved(client, tagName);
+	}
+	
+	delete tagList;
+	
+	return 0;
 }
 
 void Client_AddTag(int client, const char[] tagName)
@@ -73,6 +94,10 @@ void Client_AddTag(int client, const char[] tagName)
 		return;
 	
 	g_tagList[client].PushString(tagName);
+	Call_StartForward(g_fwOnPlayerTagAdded);
+	Call_PushCell(client);
+	Call_PushString(tagName);
+	Call_Finish();
 }
 
 void Client_RemoveTag(int client, const char[] tagName)
@@ -85,6 +110,7 @@ void Client_RemoveTag(int client, const char[] tagName)
 		return;
 	
 	g_tagList[client].Erase(idx);
+	Forward_OnRemoved(client, tagName);
 }
 
 bool Client_HasTag(int client, const char[] tagName)
@@ -98,4 +124,12 @@ bool Client_HasTag(int client, const char[] tagName)
 ArrayList CreateTagList()
 {
 	return new ArrayList(TAGNAME_LENGTH);
+}
+
+void Forward_OnRemoved(int client, const char[] tagName)
+{
+	Call_StartForward(g_fwOnPlayerTagRemoved);
+	Call_PushCell(client);
+	Call_PushString(tagName);
+	Call_Finish();
 }

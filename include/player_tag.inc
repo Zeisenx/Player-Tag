@@ -9,6 +9,9 @@ native bool PlayerTag_Has(int client, const char[] tagName);
 native void PlayerTag_Remove(int client, const char[] tagName);
 native void PlayerTag_RemoveAll(int client);
 
+forward void PlayerTag_OnAdded(int client, const char[] tagName);
+forward void PlayerTag_OnRemoved(int client, const char[] tagName);
+
 public SharedPlugin __pl_player_tag = 
 {
 	name = "player_tag",
